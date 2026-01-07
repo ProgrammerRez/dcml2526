@@ -65,3 +65,7 @@ Anomaly Log Created at 2026-01-06T08:14:04.912441
 [2026-01-07T06:45:13.981870] ⚠️ Anomaly Detected | CPU: 0.1350, RAM: 0.7638, Disk: 0.5015, Prediction: 1
 [2026-01-07T06:46:19.354803] ⚠️ Anomaly Detected | CPU: 0.0780, RAM: 0.6871, Disk: 0.6049, Prediction: 1
 [2026-01-07T06:46:20.931968] ⚠️ Anomaly Detected | CPU: 0.0800, RAM: 0.6890, Disk: 0.6049, Prediction: 1
+[2026-01-07T15:02:23.839541] ⚠️ Anomaly Detected | CPU: 0.7250, RAM: 0.7550, Disk: 0.6798, Prediction: 1
+[2026-01-07T15:02:25.655682] ⚠️ Anomaly Detected | CPU: 1.0000, RAM: 0.7545, Disk: 0.6798, Prediction: 1
+[2026-01-07T15:02:27.372989] ⚠️ Anomaly Detected | CPU: 0.7910, RAM: 0.7510, Disk: 0.6798, Prediction: 1
+[2026-01-07T15:02:50.407614] ⚠️ Anomaly Detected | CPU: 0.8140, RAM: 0.8462, Disk: 0.6799, Prediction: 1

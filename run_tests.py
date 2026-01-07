@@ -1,4 +1,4 @@
-from tests import cpu_test, ram_test, disk_test
+from tests import cpu_test, ram_test, disk_test # type: ignore
 from typing import Callable
 
 # =========================
