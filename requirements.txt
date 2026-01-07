@@ -1,0 +1,9 @@
+psutil
+pandas
+joblib
+scikit-learn
+imbalanced-learn
+python-dotenv
+from-root
+pypdf
+ipykernel
