@@ -1,1 +1,11 @@
 
+[2026-01-10T16:00:22.585635] ⚠️ Anomaly Detected | CPU: 0.7550, RAM: 0.7767, Disk: 0.8323, Prediction: 1
+[2026-01-10T16:00:24.495638] ⚠️ Anomaly Detected | CPU: 1.0000, RAM: 0.7774, Disk: 0.8323, Prediction: 1
+[2026-01-10T16:00:26.512932] ⚠️ Anomaly Detected | CPU: 1.0000, RAM: 0.7761, Disk: 0.8323, Prediction: 1
+[2026-01-10T16:00:28.386806] ⚠️ Anomaly Detected | CPU: 1.0000, RAM: 0.7782, Disk: 0.8323, Prediction: 1
+[2026-01-10T16:00:30.300314] ⚠️ Anomaly Detected | CPU: 1.0000, RAM: 0.7777, Disk: 0.8323, Prediction: 1
+[2026-01-10T16:00:32.299315] ⚠️ Anomaly Detected | CPU: 1.0000, RAM: 0.7782, Disk: 0.8323, Prediction: 1
+[2026-01-10T16:00:34.194921] ⚠️ Anomaly Detected | CPU: 0.9990, RAM: 0.7778, Disk: 0.8323, Prediction: 1
+[2026-01-10T16:00:36.173623] ⚠️ Anomaly Detected | CPU: 1.0000, RAM: 0.7803, Disk: 0.8323, Prediction: 1
+[2026-01-10T16:00:38.166661] ⚠️ Anomaly Detected | CPU: 1.0000, RAM: 0.7798, Disk: 0.8323, Prediction: 1
+[2026-01-10T16:00:40.167184] ⚠️ Anomaly Detected | CPU: 0.9990, RAM: 0.7765, Disk: 0.8323, Prediction: 1
