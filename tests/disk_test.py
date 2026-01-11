@@ -1,71 +1,82 @@
 import os
 import time
+import psutil
 
 # =========================
 # CONFIGURATION
 # =========================
 FILE_PATH = "disk_stress_test.bin"
-FILE_SIZE_MB = 15048  # Total size to write (MB). Adjust as needed.
-CHUNK_MB = 500        # Write in chunks of this size
-SLEEP_SEC = 0         # Sleep between chunk writes (seconds)
+CHUNK_MB = 500
+MAX_MB = 15048
+SLEEP_SEC = 1
 
 
-# =========================
-# FUNCTION DEFINITIONS
-# =========================
 def disk_test(file_path: str = FILE_PATH,
-              file_size_mb: int = FILE_SIZE_MB,
+              max_mb: int = MAX_MB,
               chunk_mb: int = CHUNK_MB,
               sleep_sec: int = SLEEP_SEC):
     """
-    Perform a disk stress test by writing and reading a large file.
+    Perform a disk stress test by writing data in chunks while reporting
+    system-level disk usage percentage.
+
+    The test guarantees cleanup of the temporary file, even if interrupted.
 
     Steps:
-        1. Write a file of `file_size_mb` in `chunk_mb` increments.
-        2. Flush and sync each chunk to disk to ensure actual write.
-        3. Optionally sleep between writes.
-        4. Read the file repeatedly to stress the disk I/O.
-        5. Delete the file after testing.
+        1. Write data to disk in fixed-size chunks up to `max_mb`.
+        2. Flush and fsync each write to force physical disk I/O.
+        3. Print total written size and current disk usage percentage.
+        4. Hold the file for 20 seconds.
+        5. Delete the file unconditionally on exit.
 
     Args:
-        file_path (str): Path of the file to create for testing.
-        file_size_mb (int): Total size of the file to write in MB.
-        chunk_mb (int): Size of each write chunk in MB.
-        sleep_sec (int): Seconds to sleep between writing chunks.
+        file_path (str): Path of the temporary disk test file.
+        max_mb (int): Maximum total data to write (MB).
+        chunk_mb (int): Size of each write chunk (MB).
+        sleep_sec (int): Seconds to sleep between writes.
     """
-    chunk = b"\0" * (chunk_mb * 1024 * 1024)  # Memory chunk for writing
+
+    total_bytes = max_mb * 1024 * 1024
+    chunk_bytes = chunk_mb * 1024 * 1024
+    written_bytes = 0
 
     print("Starting disk stress test...")
 
     try:
-        # -------------------
-        # WRITE PHASE
-        # -------------------
         with open(file_path, "wb") as f:
-            written = 0
-            while written < file_size_mb:
-                f.write(chunk)
+            while written_bytes < total_bytes:
+                remaining = total_bytes - written_bytes
+                write_size = min(chunk_bytes, remaining)
+
+                f.write(b"\0" * write_size)
                 f.flush()
                 os.fsync(f.fileno())
-                written += chunk_mb
-                print(f"Written {written} MB")
+
+                written_bytes += write_size
+
+                usage = psutil.disk_usage(
+                    os.path.dirname(os.path.abspath(file_path)) or "/"
+                )
+
+                print(
+                    f"Written: {written_bytes // (1024**2)} MB | "
+                    f"Disk used: {usage.percent:.2f}%"
+                )
+
                 time.sleep(sleep_sec)
 
-        # -------------------
-        # READ PHASE
-        # -------------------
-        print("Reading file repeatedly to stress disk I/O...")
-        for _ in range(10):
-            with open(file_path, "rb") as f:
-                while f.read(1024 * 1024):  # Read in 1MB chunks
-                    pass
+        print("Holding disk usage for 20 seconds...")
+        time.sleep(20)
 
-        time.sleep(10)  # Optional pause after read phase
+    except KeyboardInterrupt:
+        print("\nInterrupted by user. Cleaning up...")
 
     finally:
-        if os.path.exists(file_path):
-            os.remove(file_path)
-            print("Disk stress file removed successfully.")
+        try:
+            if os.path.exists(file_path):
+                os.remove(file_path)
+                print("Disk stress file removed successfully.")
+        except OSError as e:
+            print(f"Failed to remove test file: {e}")
 
 
 # =========================
