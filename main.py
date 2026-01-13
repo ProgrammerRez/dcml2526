@@ -1,7 +1,6 @@
 import os
 import time
 from datetime import datetime
-
 import pandas as pd
 import psutil
 import joblib
@@ -17,7 +16,7 @@ LOG_DIR = os.path.join(OUTPUT_DIR, "test_results")
 
 INFERENCE_CSV = os.path.join(LOG_DIR, "system_inference_log.csv")
 
-LOG_INTERVAL_SEC = 1  # Seconds between metric samples
+LOG_INTERVAL_SEC = 1
 FEATURES = ["cpu_ratio", "ram_ratio", "disk_ratio"]
 
 PIPELINE_FILE = os.path.join(
@@ -63,12 +62,6 @@ model = pipeline.named_steps["clf"]
 # ALERT
 # =========================
 def beep():
-    """
-    Emit an audible alert when an anomaly is detected.
-
-    Uses the Windows `winsound` module if available.
-    Falls back to the terminal bell on non-Windows systems.
-    """
     try:
         import winsound
         winsound.Beep(1000, 500)
@@ -80,24 +73,6 @@ def beep():
 # MONITORING LOOP
 # =========================
 def monitor_system():
-    """
-    Continuously monitor system resource usage and log model inferences.
-
-    This function:
-    - Samples CPU, RAM, and disk usage at fixed intervals
-    - Transforms metrics using the trained preprocessing pipeline
-    - Predicts system stress using the trained model
-    - Appends every reading (normal or anomalous) to a CSV file
-    - Emits an audible alert when an anomaly is detected
-
-    The CSV acts as an append-only inference audit log and can be used for:
-    - Post-hoc analysis
-    - Drift detection
-    - Retraining
-    - Precision/recall evaluation
-
-    Execution continues indefinitely until interrupted by the user.
-    """
     print("System monitoring started. Press Ctrl+C to stop.")
 
     try:
@@ -106,22 +81,21 @@ def monitor_system():
             ts = int(time.time() * 1000)
             dt = datetime.utcnow().isoformat()
 
-            # System metrics (ratios in [0, 1])
+            # System metrics
             cpu = psutil.cpu_percent(interval=None) / 100.0
             ram = psutil.virtual_memory().used / psutil.virtual_memory().total
             disk_ratio = psutil.disk_usage("/").used / psutil.disk_usage("/").total
 
-            # Prepare model input
+            # Model input
             X_raw = pd.DataFrame(
                 [[cpu, ram, disk_ratio]],
                 columns=FEATURES
             )
 
-            # Inference
             X_processed = preprocessor.transform(X_raw)
             predicted_stress = int(model.predict(X_processed)[0])
 
-            # Log row (always)
+            # Always log to CSV
             row = {
                 "timestamp_ms": ts,
                 "datetime_utc": dt,
@@ -138,8 +112,13 @@ def monitor_system():
                 header=False
             )
 
-            # Alert only on anomaly
+            # Terminal warning on anomaly
             if predicted_stress == 1:
+                print(
+                    f"[{dt}] ⚠ Anomaly Detected | "
+                    f"CPU={cpu:.4f}, RAM={ram:.4f}, Disk={disk_ratio:.4f}, "
+                    f"Prediction={predicted_stress}"
+                )
                 beep()
 
             time.sleep(LOG_INTERVAL_SEC)
@@ -152,9 +131,4 @@ def monitor_system():
 # MAIN
 # =========================
 if __name__ == "__main__":
-    """
-    Entry point for real-time system monitoring.
-
-    Initializes logging and starts the monitoring loop.
-    """
     monitor_system()
