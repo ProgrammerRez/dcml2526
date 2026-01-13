@@ -13,35 +13,35 @@ from typing import Tuple
 FEATURES = ["cpu_ratio", "ram_ratio", "disk_ratio"]
 
 
-# =========================
-# FUNCTION DEFINITIONS
-# =========================
-def preprocess_data(df: pd.DataFrame) -> Tuple[Pipeline, pd.DataFrame, pd.Series, pd.DataFrame, pd.Series]:
+def preprocess_data(
+    df: pd.DataFrame
+) -> Tuple[Pipeline, pd.DataFrame, pd.Series, pd.DataFrame, pd.Series]:
     """
-    Prepare a machine learning pipeline for anomaly detection.
-    
-    Steps included:
-        - Split dataset into train and test sets (stratified by 'pred_label').
-        - Standardize numeric features using StandardScaler.
-        - Apply SMOTE to oversample minority class in training set.
-        - Build a pipeline combining preprocessing, SMOTE, and classifier.
+    Prepare a supervised learning pipeline and split data into train/test sets.
+
+    This function:
+    - Extracts predefined system ratio features
+    - Performs a stratified train/test split on the target label
+    - Scales numeric features using StandardScaler
+    - Applies SMOTE with a safe, data-dependent neighbor configuration
+    - Constructs an imbalanced-learn Pipeline with Logistic Regression
 
     Args:
-        df (pd.DataFrame): Dataset containing features and 'pred_label'.
+        df (pd.DataFrame): Input dataset containing feature columns and
+            a binary target column named `pred_label`.
 
     Returns:
         Tuple containing:
-            - pipeline (Pipeline): Imbalanced-learn pipeline with preprocessing and LogisticRegression.
-            - X_train (pd.DataFrame): Training features.
-            - y_train (pd.Series): Training labels.
-            - X_test (pd.DataFrame): Test features.
-            - y_test (pd.Series): Test labels.
+            pipeline (Pipeline): Preprocessing + SMOTE + classifier pipeline.
+            X_train (pd.DataFrame): Training feature matrix.
+            y_train (pd.Series): Training labels.
+            X_test (pd.DataFrame): Test feature matrix.
+            y_test (pd.Series): Test labels.
     """
-    # Split features and target
-    X = df[FEATURES]
-    y = df['pred_label']
 
-    # Train-test split
+    X = df[FEATURES]
+    y = df["pred_label"]
+
     X_train, X_test, y_train, y_test = train_test_split(
         X,
         y,
@@ -50,29 +50,51 @@ def preprocess_data(df: pd.DataFrame) -> Tuple[Pipeline, pd.DataFrame, pd.Series
         random_state=42
     )
 
-    # Preprocessing: scale numeric features
     preprocessor = ColumnTransformer(
         transformers=[
             ("num", StandardScaler(), FEATURES)
         ]
     )
 
-    # Pipeline: preprocessing + SMOTE + Logistic Regression classifier
+    minority_count = y_train.value_counts().min()
+    k_neighbors = max(1, min(2, minority_count - 1))
+
+    smote = SMOTE(
+        k_neighbors=k_neighbors,
+        random_state=42
+    )
+
     pipeline = Pipeline(steps=[
         ("preprocess", preprocessor),
-        ("smote", SMOTE(random_state=42)),
-        ("clf", LogisticRegression())
+        ("smote", smote),
+        ("clf", LogisticRegression(max_iter=1000))
     ])
 
     return pipeline, X_train, y_train, X_test, y_test
 
 
-# =========================
-# MAIN (OPTIONAL TEST)
-# =========================
-if __name__ == "__main__":
-    # Example usage
-    from data_ingestion import load_data  # assuming you saved the previous .env loader as load_data_env.py
+def main():
+    """
+    Execute a local preprocessing sanity check.
+
+    Loads raw data, constructs the preprocessing pipeline,
+    performs a train/test split, and prints the training
+    class distribution to verify imbalance handling.
+
+    Intended for development-time validation only.
+    """
+    from data_ingestion import load_data
+
     df = load_data()
     pipeline, X_train, y_train, X_test, y_test = preprocess_data(df)
-    print("Pipeline and train-test split ready.")
+
+    print("Pipeline ready")
+    print("Training class distribution:")
+    print(y_train.value_counts())
+
+
+# =========================
+# ENTRY POINT
+# =========================
+if __name__ == "__main__":
+    main()

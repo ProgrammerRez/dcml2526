@@ -62,6 +62,14 @@ model = pipeline.named_steps["clf"]
 # ALERT
 # =========================
 def beep():
+    """
+    Emit an audible alert to signal an anomaly detection event.
+
+    On Windows systems, this uses the `winsound.Beep` API.
+    On non-Windows systems, it falls back to emitting a
+    terminal bell character, which may or may not produce sound
+    depending on terminal configuration.
+    """
     try:
         import winsound
         winsound.Beep(1000, 500)
@@ -73,6 +81,19 @@ def beep():
 # MONITORING LOOP
 # =========================
 def monitor_system():
+    """
+    Continuously monitor system resource usage and detect anomalies.
+
+    This function:
+    - Samples CPU, RAM, and disk usage at a fixed interval
+    - Transforms metrics using a pre-trained preprocessing pipeline
+    - Predicts system stress using a trained supervised model
+    - Logs all observations and predictions to a CSV file
+    - Triggers an audible alert and console warning on anomaly detection
+
+    The loop runs indefinitely until interrupted by the user
+    (Ctrl+C).
+    """
     print("System monitoring started. Press Ctrl+C to stop.")
 
     try:
@@ -94,15 +115,16 @@ def monitor_system():
 
             X_processed = preprocessor.transform(X_raw)
             predicted_stress = int(model.predict(X_processed)[0])
+            predicted_label = 'anomaly' if predicted_stress == 1 else 'normal'
 
-            # Always log to CSV
+            # Log to CSV
             row = {
                 "timestamp_ms": ts,
                 "datetime_utc": dt,
                 "cpu_ratio": round(cpu, 4),
                 "ram_ratio": round(ram, 4),
                 "disk_ratio": round(disk_ratio, 4),
-                "predicted_stress": predicted_stress
+                "predicted_stress": predicted_label
             }
 
             pd.DataFrame([row]).to_csv(
@@ -112,12 +134,12 @@ def monitor_system():
                 header=False
             )
 
-            # Terminal warning on anomaly
+            # Trigger beep on anomaly
             if predicted_stress == 1:
                 print(
                     f"[{dt}] ⚠ Anomaly Detected | "
                     f"CPU={cpu:.4f}, RAM={ram:.4f}, Disk={disk_ratio:.4f}, "
-                    f"Prediction={predicted_stress}"
+                    f"Prediction={predicted_label}"
                 )
                 beep()
 
@@ -131,4 +153,11 @@ def monitor_system():
 # MAIN
 # =========================
 if __name__ == "__main__":
+    """
+    Entry point for real-time system monitoring.
+
+    Loads the trained inference pipeline and starts the
+    continuous monitoring loop. Intended to be run as a
+    standalone process for live anomaly detection.
+    """
     monitor_system()

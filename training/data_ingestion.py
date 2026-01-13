@@ -19,7 +19,7 @@ try:
     ERROR = float(os.getenv('ERROR', 0.1))  # default error if not set
 except TypeError:
     raise ValueError("One or more .env variables are missing or invalid. "
-                     "Ensure CPU_QUANTILE, RAM_QUANTILE, DISK_QUANTILE, and ERROR are set.")
+                    "Ensure CPU_QUANTILE, RAM_QUANTILE, DISK_QUANTILE, and ERROR are set.")
 
 
 # =========================
@@ -32,7 +32,7 @@ def load_data() -> pd.DataFrame:
 
     Returns:
         pd.DataFrame: Original dataset with an added 'pred_label' column,
-                      where 1 = anomaly, 0 = normal.
+                    where 1 = anomaly, 0 = normal.
 
     Behavior:
         - Thresholds are computed from quantiles specified in .env.
